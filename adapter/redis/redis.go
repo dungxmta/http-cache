@@ -35,7 +35,8 @@ import (
 
 // Adapter is the memory adapter data structure.
 type Adapter struct {
-	store *redisCache.Codec
+	store     *redisCache.Codec
+	prefixKey string
 }
 
 type rediser interface {
@@ -47,7 +48,7 @@ type rediser interface {
 // Get implements the cache Adapter interface Get method.
 func (a *Adapter) Get(key uint64) ([]byte, bool) {
 	var c []byte
-	if err := a.store.Get(cache.KeyAsString(key), &c); err == nil {
+	if err := a.store.Get(a.keyAsString(key), &c); err == nil {
 		return c, true
 	}
 
@@ -57,7 +58,7 @@ func (a *Adapter) Get(key uint64) ([]byte, bool) {
 // Set implements the cache Adapter interface Set method.
 func (a *Adapter) Set(key uint64, response []byte, expiration time.Time) {
 	a.store.Set(&redisCache.Item{
-		Key:        cache.KeyAsString(key),
+		Key:        a.keyAsString(key),
 		Object:     response,
 		Expiration: expiration.Sub(time.Now()),
 	})
@@ -65,21 +66,41 @@ func (a *Adapter) Set(key uint64, response []byte, expiration time.Time) {
 
 // Release implements the cache Adapter interface Release method.
 func (a *Adapter) Release(key uint64) {
-	a.store.Delete(cache.KeyAsString(key))
+	a.store.Delete(a.keyAsString(key))
+}
+
+func (a *Adapter) keyAsString(key uint64) string {
+	return a.prefixKey + cache.KeyAsString(key)
 }
 
 // NewAdapter initializes Redis adapter.
-func NewAdapter(r rediser) cache.Adapter {
-	return &Adapter{
-		&redisCache.Codec{
+func NewAdapter(r rediser, opts ...AdapterOption) cache.Adapter {
+	a := &Adapter{
+		store: &redisCache.Codec{
 			Redis: r,
 			Marshal: func(v interface{}) ([]byte, error) {
 				return msgpack.Marshal(v)
-
 			},
 			Unmarshal: func(b []byte, v interface{}) error {
 				return msgpack.Unmarshal(b, v)
 			},
 		},
+	}
+
+	for _, opt := range opts {
+		if err := opt(a); err != nil {
+			return nil
+		}
+	}
+
+	return a
+}
+
+type AdapterOption func(a *Adapter) error
+
+func AdapterWithPrefixKey(prefixKey string) AdapterOption {
+	return func(a *Adapter) error {
+		a.prefixKey = prefixKey
+		return nil
 	}
 }
