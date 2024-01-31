@@ -13,8 +13,7 @@ var a cache.Adapter
 
 func TestSet(t *testing.T) {
 	r := goredis.NewClient(&goredis.Options{
-		Addr:     ":6379",
-		Password: "password",
+		Addr: ":6379",
 	})
 	a = NewAdapter(r, AdapterWithPrefixKey("test"))
 
