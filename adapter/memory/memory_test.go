@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/victorspringer/http-cache"
+	"github.com/dungxmta/http-cache"
 )
 
 func TestGet(t *testing.T) {

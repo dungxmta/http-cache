@@ -27,9 +27,9 @@ package redis
 import (
 	"time"
 
+	cache "github.com/dungxmta/http-cache"
 	redisCache "github.com/go-redis/cache/v7"
 	goredis "github.com/go-redis/redis/v7"
-	cache "github.com/victorspringer/http-cache"
 	"github.com/vmihailenco/msgpack"
 )
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	cache "github.com/binhnguyenduc/http-cache"
+	cache "github.com/dungxmta/http-cache"
 	goredis "github.com/go-redis/redis/v7"
 )
 
